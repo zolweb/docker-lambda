@@ -6,6 +6,20 @@ The intended purpose of this repository is to provide branches and tags for a do
 
 See [CHANGELOG](CHANGELOG.md) for all available versions.
 
+This image is based on [AWS Official Images](https://hub.docker.com/r/amazon/aws-lambda-nodejs), RIC and RIE.
+Instead of letting the container expose the port and having to make a curl request against it, the container accept directly a json file and will make the curl itself.
+
+Use it like this :
+
+```bash
+docker run \
+        --rm \
+        -v $(PWD)/src:/var/task:ro,delegated \
+        -v $(PWD)/events:/var/events:ro,delegated \
+        -i \
+        local-docker-lambda example.json
+```
+
 ## How to update
 
 If you want to apply updates on this repository, checkout to the current tag you want to start with, 
