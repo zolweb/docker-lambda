@@ -9,17 +9,6 @@ See [CHANGELOG](CHANGELOG.md) for all available versions.
 This image is based on [AWS Official Images](https://hub.docker.com/r/amazon/aws-lambda-nodejs), RIC and RIE.
 Instead of letting the container expose the port and having to make a curl request against it, the container accept directly a json file and will make the curl itself.
 
-Use it like this :
-
-```bash
-docker run \
-        --rm \
-        -v $(PWD)/src:/var/task:ro,delegated \
-        -v $(PWD)/events:/var/events:ro,delegated \
-        -i \
-        local-docker-lambda example.json
-```
-
 ## How to update
 
 If you want to apply updates on this repository, checkout to the current tag you want to start with, 
@@ -54,54 +43,42 @@ Automatic building is enabled, any tag push or master push trigger a build as fo
 
 Examples :
 - Pushing the tag `16.0.16` gives the image `zolweb/docker-lambda:16.0.16`
-- Pushing to `master` updates the image `zolweb/docker-lambda:latest`
+- Pushing to `main` updates the image `zolweb/docker-lambda:latest`
 
 You should not use `latest` tag, as the push order on this repository is done following our own needs, not node versions. Use tag instead.
 
 ## How to use it
 
-The docker image open a light web server on port 8080 (This is all included in 
-[the AWS Lambda Runtime Interface Emulator (RIE)](https://docs.aws.amazon.com/lambda/latest/dg/images-test.html) tool). 
-
-###  Start a lambda locally
-
-Example:
-```
-
-	docker run \
-		--rm -d \
-		-p 9000\:8080 \
-		--name my-lambda \
-		--network reverseproxy \
-		-v $(PWD)/src:/function:ro,delegated \
-		--env-file=$(PWD)/../../../.env \
-		--entrypoint /aws-lambda/aws-lambda-rie \
-		zolweb/docker-lambda \
-		/usr/local/bin/npx aws-lambda-ric index.handler
-```
-
-The code is mounted in volume on `/function`. 
-
-### View logs
-```
-	docker logs -f my-lambda
-```
-
-To invoke the lambda, make a simple http call:
+Assuming your directory structure look like :
 
 ```
-http://localhost:9000/2015-03-31/functions/function/invocations
-{
-    "var1": 3
-}
-
+your-lambda/
+|---- events/
+|---- | ---- example-event1.json
+|---- | ---- example-event2.json
+|---- src/
+|---- | ---- index.js
+|---- | ---- package.json
 ```
 
-NOTE: you can only make one call at the same time.
+From the `your-lambda` directory, you may use this image like this :
 
-### Stop the container
+```bash
+docker run \
+        --rm \
+        -v $(PWD)/src:/var/task:ro,delegated \
+        -v $(PWD)/events:/var/events:ro,delegated \
+        -i \
+        zolweb/docker-lambda:18.14 example-event1.json
 ```
 
-	docker stop my-lambda
-
+You may see info and warning at each execution :
 ```
+10 Mar 2023 11:19:54,322 [INFO] (rapid) exec '/var/runtime/bootstrap' (cwd=/var/task, handler=)
+10 Mar 2023 11:19:54,326 [INFO] (rapid) extensionsDisabledByLayer(/opt/disable-extensions-jwigqn8j) -> stat /opt/disable-extensions-jwigqn8j: no such file or directory
+10 Mar 2023 11:19:54,326 [WARNING] (rapid) Cannot list external agents error=open /opt/extensions: no such file or directory
+```
+
+The warning comes from AWS Lambda RIE / RIC, we don't know how to get rid of it (by fixing it, not hiding).
+There are some articles or stackoverflow posts ([1](https://www.srvrlss.io/blog/Amazon-Lambda-docker/), [2](https://stackoverflow.com/questions/68090955/test-an-aws-lambda-locally-using-docker-container-image), [3](https://mdneuzerling.com/post/r-on-aws-lambda-with-containers/)) where it doesn't seem to bother anyone.
+Even if it's stressful for us to not understand why it appears, we can't do much about it.
