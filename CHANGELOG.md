@@ -3,6 +3,11 @@
 Tags come from node version installed + specific indication if needed.
 Be careful : the list is ordered by more recent tag first, not node version it-self, as recent version may include fixes and are added only if needed.
 
+## 20.13
+Update date : 23/11/2023
+
+- Update to node 20
+
 ## 18.14
 Update date : 08/03/2023
 
